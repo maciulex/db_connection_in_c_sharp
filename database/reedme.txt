@@ -1,0 +1,2 @@
+trzeba wykonać tą komende tam gdzie wykonujemy dotnet run by wszystko działało (Potrzebna jest biblioteka z połączeniem do bazy danych)
+dotnet add package MySqlConnector
