@@ -3,27 +3,44 @@ namespace DATABASE {
 
     
     public partial class DATABASE_MANAGER {
-        public string getLatestSnippsetPath() {
-            string directoryWithBackUp = "programmist/snippet";
+        
 
+        public void dropAllDatabsesFromSnippet(string path) {
             FILES.FILES fileManager = new FILES.FILES();
-            string [] directories = fileManager.GetDirectories(directoryWithBackUp);
-            int latestSnippet = -1;
-            string result = "NULL";
-            foreach (string d in directories) {
-                try {
-                    if (!fileManager.directoryExists(d+"/json/")) continue;
-                    string nr = d.Split("\\")[1];
-                    if (Convert.ToInt32(nr) > latestSnippet) {
-                        latestSnippet = Convert.ToInt32(nr);
-                        result = d;
-                    }
-                } catch (Exception e) {
+            if (!fileManager.directoryExists(path)) return ;
 
-                }
+            string [] files = fileManager.GetFiles(path);
+
+            List<string> db_names = new List<string>{};
+            
+            foreach (string f in files) {
+                var database = fileManager.getJsonFile(f);
+                db_names.Add(database.DATABASE.DATABASE_META.DATABASE_NAME.ToString()); 
             }
-            return result;
-        }
+            DropDatabases(db_names);
+        } 
+
+        // public string getLatestSnippsetPath() {
+        //     string directoryWithBackUp = "programmist/snippet";
+
+        //     FILES.FILES fileManager = new FILES.FILES();
+        //     string [] directories = fileManager.GetDirectories(directoryWithBackUp);
+        //     int latestSnippet = -1;
+        //     string result = "NULL";
+        //     foreach (string d in directories) {
+        //         try {
+        //             if (!fileManager.directoryExists(d+"/json/")) continue;
+        //             string nr = d.Split("\\")[1];
+        //             if (Convert.ToInt32(nr) > latestSnippet) {
+        //                 latestSnippet = Convert.ToInt32(nr);
+        //                 result = d;
+        //             }
+        //         } catch (Exception e) {
+
+        //         }
+        //     }
+        //     return result;
+        // }
 
         public bool recoverFromJson(string path) {
             FILES.FILES fileManager = new FILES.FILES();
@@ -81,11 +98,11 @@ namespace DATABASE {
             return false;
         }
 
-        public bool recoverFromLatestJson() {
-            FILES.FILES fileManager = new FILES.FILES();
+        // public bool recoverFromLatestJson() {
+        //     FILES.FILES fileManager = new FILES.FILES();
             
-            return true;
-        }
+        //     return true;
+        // }
     }
 
 

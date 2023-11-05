@@ -45,6 +45,7 @@ namespace DATABASE {
                 sql += "ALTER TABLE `"+tb_name+"` ";
                 sql += primaryString + " " + uniqueString + ";";
             }
+            
             if (autoIncrement.Length > 0 ) {
                 sql += "ALTER TABLE `"+tb_name+"` ";
                 sql += "MODIFY "+autoIncrement + ";";

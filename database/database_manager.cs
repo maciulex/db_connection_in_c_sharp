@@ -1,6 +1,7 @@
 using System.ComponentModel.DataAnnotations.Schema;
 using System.Data.Common;
 using System.Net.Http.Headers;
+using System.Net.Mime;
 using Azure.Core.Pipeline;
 using MySqlConnector;
 
@@ -12,7 +13,7 @@ namespace DATABASE {
         enum DATABASE_LIST_MODE {WHITELIST, BLACKLIST};
         DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.BLACKLIST;
         //"performance_schema", "information_schema","mysql"
-        List<string>             DATABASE_LIST = new List<string>{"performance_schema", "information_schema","mysql"};
+        List<string>             DATABASE_LIST = new List<string>{"performance_schema", "information_schema","mysql", "phpmyadmin"};
         string baseSnippetPath = "programmist/snippet/";
         
         bool DATABASE_TABLES_DOWLOADED = false;
@@ -26,6 +27,89 @@ namespace DATABASE {
             while (fileManager.directoryExists(baseSnippetPath+""+snippetFolder)) snippetFolder++;
 
             return snippetFolder;
+        }
+
+        public void wholeSnippet() {
+            int snippetNumber = getFreeSnipetNumber();
+            dbSchemeToClass(snippetNumber);
+            dbSchemeToJSON (snippetNumber);
+            dbDataToSql    (snippetNumber);
+        }
+        public void dbDataToSql() {
+            dbDataToSql(getFreeSnipetNumber());
+        }
+
+        public void sqlDataToDb(string path) {
+            FILES.FILES fileManager = new FILES.FILES();
+            if (!fileManager.directoryExists(path)) return ;
+
+            string [] files = fileManager.GetFiles(path);
+
+            foreach (string f in files) {
+                string contents = File.ReadAllText(f);
+                DATABASE_MAIN.query(contents);
+            }
+        }
+
+        public void dbDataToSql(int snippetNumber) {
+            string classPath = baseSnippetPath+""+snippetNumber+"/sql/";;
+            FILES.FILES fileManager = new FILES.FILES();
+
+            if (!DATABASE_TABLES_DOWLOADED) getAllScheme();
+
+            try {
+                fileManager.createDirectory(classPath);
+                foreach (DATABASE_STRUCT db in DATABASES) {
+                    DATABASE_MAIN.changeDB(db.DB_NAME);
+                    StreamWriter f = new StreamWriter(classPath+db.DB_NAME+".sql", false);
+                    f.WriteLine("USE `"+db.DB_NAME+"`;");
+                    foreach (DATABASE_TABLE_STRUCT t in db.TABLES) {
+                        QUERY_RESULT q = DATABASE_MAIN.query("SELECT * FROM `"+t.TABLE_NAME+"` WHERE 1");
+                        string columnNames = "";
+                        if (q.data.Count == 0) continue;
+                        foreach(var d in q.data[0].Keys) {
+                            columnNames += "`"+d+"`, ";
+                        }
+                        columnNames = columnNames.Remove(columnNames.Length-2,2);
+                        f.WriteLine("INSERT INTO `"+t.TABLE_NAME+"` (");
+                        f.WriteLine("\t"+columnNames);
+                        f.WriteLine(") VALUES ");
+                        string insert = "";
+                        foreach(var d in q.data) {
+                            insert += "\n\t(";
+                            int counter = 0;
+                            foreach(var sd in d.Keys) {
+                                string val;
+                                switch (t.COLUMNS[counter].DATA_TYPE) {
+                                    case "tinyint":
+                                    case "smallint":
+                                    case "mediumint":
+                                    case "int":
+                                    case "bigint":
+                                    case "bit":
+                                    case "boolean":
+                                        val = Convert.ToString(Convert.ToInt64(d[sd]));
+                                    break;
+                                    default:
+                                        val = "'"+Convert.ToString(d[sd])+"'";
+                                    break;
+                                }
+                                insert += val+",";
+                                counter ++;
+
+                            }
+                            insert = insert.Remove(insert.Length-1,1);
+                            insert += "),";
+                        } 
+                        insert = insert.Remove(insert.Length - 1, 1);
+                        f.WriteLine(insert);
+                        f.WriteLine(";");
+                    }
+                    f.Close();
+                }
+            } catch (Exception e) {
+                Console.WriteLine(e.ToString());
+            }
         }
 
         public void getAllSnipets() {
@@ -49,9 +133,9 @@ namespace DATABASE {
 
                 f.WriteLine("using DATABASE;");
                 f.WriteLine("namespace DATABASE_SCHEME {");
-                f.WriteLine("\tclass "+db.DB_NAME+" {");
+                f.WriteLine("\tclass "+db.DB_NAME+"_DATABASE {");
                 foreach (DATABASE_TABLE_STRUCT table in db.TABLES) {
-                    f.WriteLine("\t\tpublic class "+table.TABLE_NAME+" {");
+                    f.WriteLine("\t\tpublic class "+table.TABLE_NAME+"_TABLE {");
                     string ifForConversion = "";
                     foreach (DATABASE_TABLE_COLUMN_STRUCT colummn in table.COLUMNS) {
                         string type       = "";
@@ -118,10 +202,10 @@ namespace DATABASE {
                     }
                         ";
                     }
-                    string a  = "            static public List<"+table.TABLE_NAME+"> get_"+table.TABLE_NAME+"_from_query(QUERY_RESULT query) {\n";
-				            a+= "                 List<"+table.TABLE_NAME+"> result = new List<"+table.TABLE_NAME+">{};\n"; 
+                    string a  = "            static public List<"+table.TABLE_NAME+"_TABLE> get_"+table.TABLE_NAME+"_from_query(QUERY_RESULT query) {\n";
+				            a+= "                 List<"+table.TABLE_NAME+"_TABLE> result = new List<"+table.TABLE_NAME+"_TABLE>{};\n"; 
 			                a+= "                 foreach (Dictionary<string, object> queryRow in query.data) {\n";
-				            a+= "                    "+table.TABLE_NAME+" tempClass = new "+table.TABLE_NAME+"{};\n"; 
+				            a+= "                    "+table.TABLE_NAME+"_TABLE tempClass = new "+table.TABLE_NAME+"_TABLE{};\n"; 
                             a+= "                     "+ifForConversion+"\n";
 				            a+= "                    result.Add(tempClass);\n"; 
 			                a+= "                 }\n";
@@ -138,7 +222,7 @@ namespace DATABASE {
         public void dbSchemeToJSON(int snippetNumber = -1) {
             if (DATABASES.Count() == 0) getAllScheme();
             FILES.FILES fileManager = new FILES.FILES();
-
+            DateTime localDate = DateTime.Now;
             string jsonPath;
 
             if (snippetNumber == -1) snippetNumber = getFreeSnipetNumber();
@@ -151,6 +235,8 @@ namespace DATABASE {
                 f.WriteLine("\t\"DATABASE\": {");
                 f.WriteLine("\t\t\"DATABASE_META\": {");
                 f.WriteLine("\t\t\t\"DATABASE_NAME\":\""+db.DB_NAME+"\",");
+                f.WriteLine("\t\t\t\"SNIPPET_DATA\"   :\""+localDate.ToString("dd MMM yyyy HH:mm:ss")+"\",");
+                f.WriteLine("\t\t\t\"SNIPPET_DATA_MS\":\""+localDate.ToUniversalTime().Subtract(new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc)).TotalMilliseconds+"\",");
                 f.WriteLine("\t\t\t\"DATABASE_TABLE_COUNT\":\""+db.TABLES.Count+"\"");
                 f.WriteLine("\t\t},");
                 f.WriteLine("\t\t\"DATABASE_DATA\": {");
@@ -170,7 +256,6 @@ namespace DATABASE {
                         f.WriteLine("\t\t\t\t\t\"IS_UNIQUE\":        \""+((db.TABLES[i].COLUMNS[z].IS_UNIQUE       ) ? "true" : false)+"\","  );
                         f.WriteLine("\t\t\t\t\t\"IS_AUTOINCREMENT\": \""+((db.TABLES[i].COLUMNS[z].IS_AUTOINCREMENT) ? "true" : false)+"\","  );
                         f.WriteLine("\t\t\t\t\t\"IS_NULLABLE\":      \""+((db.TABLES[i].COLUMNS[z].IS_NULLABLE     ) ? "true" : false)+"\""   );
-
 
                         if (z < db.TABLES[i].COLUMNS.Count - 1) { 
                             f.WriteLine("\t\t\t\t},");

@@ -10,7 +10,7 @@ namespace DATABASE {
         /// </summary>
         /// <returns>A reference to the MySqlConnection object for the newly opened connection.</returns>
         public ref MySqlConnection openConnection() {
-            connection = new MySqlConnection("Server=" + connection_credits.DATABASE_SERVER + ";User ID=" + connection_credits.USER + ";Password=" + connection_credits.PASSWORD + ";Database=" + connection_credits.DATABASE);
+            connection = new MySqlConnection("Server=" + connection_credits.DATABASE_SERVER + ";User ID=" + connection_credits.USER + ";Password=" + connection_credits.PASSWORD + ";Database=" + connection_credits.DATABASE+";AllowZeroDateTime=True");
             connection.Open();
             return ref connection;
         }

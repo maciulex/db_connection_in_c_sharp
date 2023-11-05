@@ -20,6 +20,10 @@ namespace DATABASE {
             query("USE "+db_name+";");
         }
 
+        public void closeConnection() {
+            conn.closeConnection();
+        }
+
         /// <summary>
         /// Establishes a database connection using provided credentials.
         /// Given credentials will overwrite main connection credentials
