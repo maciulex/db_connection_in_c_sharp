@@ -10,9 +10,9 @@ namespace DATABASE {
         List<DATABASE_STRUCT>    DATABASES = new List<DATABASE_STRUCT>{};
 
         enum DATABASE_LIST_MODE {WHITELIST, BLACKLIST};
-        DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.WHITELIST;
+        DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.BLACKLIST;
         //"performance_schema", "information_schema","mysql"
-        List<string>             DATABASE_LIST = new List<string>{"example_db"};
+        List<string>             DATABASE_LIST = new List<string>{"performance_schema", "information_schema","mysql"};
         string baseSnippetPath = "programmist/snippet/";
         
         bool DATABASE_TABLES_DOWLOADED = false;

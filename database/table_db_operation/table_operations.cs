@@ -3,7 +3,7 @@ namespace DATABASE {
         public void CreateTable(string tb_name, List<string> columnNames, List<string> columnTypes, List<bool> isAutoIncrement, 
                                 List<bool> isPrimary, List<bool> isUnique, List<bool> isNull, List<string> deafult, List<string> extra) {
             
-            string uniqueString = "", primaryString = ""; 
+            string uniqueString = "", primaryString = "", autoIncrement = ""; 
             
             string sql ="CREATE TABLE `"+tb_name+"`(";
             for (int i = 0; i < columnNames.Count(); i++) {
@@ -15,11 +15,13 @@ namespace DATABASE {
                 if (!isNull[i] && deafult[i] != "NULL")
                     extraString += " DEFAULT "+ deafult[i];
 
+                string row = columnNames[i] + " " + columnTypes[i]+" "+extraString;
+                sql += row;
+
                 if (isAutoIncrement[i]) {
-                    extraString += " AUTO_INCREMENT";
+                    autoIncrement += row+" AUTO_INCREMENT";
                 }
-                
-                sql += columnNames[i] + " " + columnTypes[i]+" "+extraString;
+
                 if (i < columnNames.Count() - 1) sql += ",";
 
                 if (isPrimary[i]) {
@@ -43,8 +45,12 @@ namespace DATABASE {
                 sql += "ALTER TABLE `"+tb_name+"` ";
                 sql += primaryString + " " + uniqueString + ";";
             }
+            if (autoIncrement.Length > 0 ) {
+                sql += "ALTER TABLE `"+tb_name+"` ";
+                sql += "MODIFY "+autoIncrement + ";";
+            }
 
-            // Console.WriteLine(sql);
+            //Console.WriteLine(sql);
 
             DATABASE_MAIN.query(sql);
         }
