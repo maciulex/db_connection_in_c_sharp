@@ -16,7 +16,8 @@ namespace DATABASE {
         }
 
         public void changeDB(string db_name) {
-            query("USE "+db_name);
+            conn.connection_credits.DATABASE = db_name;
+            query("USE "+db_name+";");
         }
 
         /// <summary>

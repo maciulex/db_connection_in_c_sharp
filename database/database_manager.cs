@@ -12,7 +12,7 @@ namespace DATABASE {
         enum DATABASE_LIST_MODE {WHITELIST, BLACKLIST};
         DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.WHITELIST;
         //"performance_schema", "information_schema","mysql"
-        List<string>             DATABASE_LIST = new List<string>{"example_db", "test"};
+        List<string>             DATABASE_LIST = new List<string>{"example_db"};
         string baseSnippetPath = "programmist/snippet/";
         
         bool DATABASE_TABLES_DOWLOADED = false;
@@ -298,10 +298,6 @@ namespace DATABASE {
             foreach (Dictionary<string, object> data in databases.data) {
                 foreach (var name in data){
                     if (name.Key != "Database") continue;
-
-                    //kvp.Key   <- to jest nazwa kolumny
-                    //kvp.Value <- to jest wartość tej kolumny
-
 
                     if (checkIfIgnoreDatabase((string)name.Value)) continue;
 
