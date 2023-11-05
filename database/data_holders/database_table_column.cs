@@ -1,8 +1,9 @@
 namespace DATABASE {
     class DATABASE_TABLE_COLUMN_STRUCT {
         public string COLUMN_NAME = "";
-        public string COLUMN_DEAFULT = "";
+        public string COLUMN_DEFAULT = "";
         public int    ORDINAL_POSITION = 0;
+        public string COLUMN_TYPE = "";
         public string DATA_TYPE = "";
         public string COLUMN_KEY = "";
         public string EXTRA = "";

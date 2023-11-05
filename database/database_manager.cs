@@ -5,23 +5,25 @@ using Azure.Core.Pipeline;
 using MySqlConnector;
 
 namespace DATABASE {
-    public class DATABASE_MANAGER {
+    public partial class  DATABASE_MANAGER {
         DATABASE DATABASE_MAIN;
         List<DATABASE_STRUCT>    DATABASES = new List<DATABASE_STRUCT>{};
 
         enum DATABASE_LIST_MODE {WHITELIST, BLACKLIST};
         DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.WHITELIST;
         //"performance_schema", "information_schema","mysql"
-        List<string>             DATABASE_LIST = new List<string>{"example_db"};
+        List<string>             DATABASE_LIST = new List<string>{"example_db", "test"};
+        string baseSnippetPath = "programmist/snippet/";
+        
+        bool DATABASE_TABLES_DOWLOADED = false;
+        bool DATABASE_NAME_DOWLOADED   = false;
 
         private int getFreeSnipetNumber() {
-            string jsonPath = "programmist/snippet/";
-
             int snippetFolder = 1;
             FILES.FILES fileManager = new FILES.FILES();
 
-            fileManager.createDirectory(jsonPath);
-            while (fileManager.directoryExists(jsonPath+""+snippetFolder)) snippetFolder++;
+            fileManager.createDirectory(baseSnippetPath);
+            while (fileManager.directoryExists(baseSnippetPath+""+snippetFolder)) snippetFolder++;
 
             return snippetFolder;
         }
@@ -36,14 +38,14 @@ namespace DATABASE {
             if (DATABASES.Count() == 0) getAllScheme();
             FILES.FILES fileManager = new FILES.FILES();
 
-            string jsonPath = "programmist/snippet/";
+            string classPath;
 
             if (snippetNumber == -1) snippetNumber = getFreeSnipetNumber();
-            jsonPath = jsonPath+""+snippetNumber+"/class/";
-            fileManager.createDirectory(jsonPath);
+            classPath = baseSnippetPath+""+snippetNumber+"/class/";
+            fileManager.createDirectory(classPath);
 
             foreach (DATABASE_STRUCT db in DATABASES) {
-                StreamWriter f = new StreamWriter(jsonPath+db.DB_NAME+".cs", false);
+                StreamWriter f = new StreamWriter(classPath+db.DB_NAME+".cs", false);
 
                 f.WriteLine("using DATABASE;");
                 f.WriteLine("namespace DATABASE_SCHEME {");
@@ -137,10 +139,10 @@ namespace DATABASE {
             if (DATABASES.Count() == 0) getAllScheme();
             FILES.FILES fileManager = new FILES.FILES();
 
-            string jsonPath = "programmist/snippet/";
+            string jsonPath;
 
             if (snippetNumber == -1) snippetNumber = getFreeSnipetNumber();
-            jsonPath = jsonPath+""+snippetNumber+"/json/";
+            jsonPath = baseSnippetPath+""+snippetNumber+"/json/";
             fileManager.createDirectory(jsonPath);
 
             foreach (DATABASE_STRUCT db in DATABASES) {
@@ -158,11 +160,12 @@ namespace DATABASE {
                     for (int z = 0; ; z++) {
                         if (db.TABLES[i].COLUMNS.Count <= 0) break;
                         f.WriteLine("\t\t\t\t\""+db.TABLES[i].COLUMNS[z].COLUMN_NAME+"\":{"                 );
-                        f.WriteLine("\t\t\t\t\t\"COLUMN_DEAFULT\":   \""+db.TABLES[i].COLUMNS[z].COLUMN_DEAFULT     +"\","  );
+                        f.WriteLine("\t\t\t\t\t\"COLUMN_DEFAULT\":   \""+db.TABLES[i].COLUMNS[z].COLUMN_DEFAULT     +"\","  );
                         f.WriteLine("\t\t\t\t\t\"ORDINAL_POSITION\": \""+db.TABLES[i].COLUMNS[z].ORDINAL_POSITION   +"\","  );
                         f.WriteLine("\t\t\t\t\t\"DATA_TYPE\":        \""+db.TABLES[i].COLUMNS[z].DATA_TYPE          +"\","  );
                         f.WriteLine("\t\t\t\t\t\"COLUMN_KEY\":       \""+db.TABLES[i].COLUMNS[z].COLUMN_KEY         +"\","  );
                         f.WriteLine("\t\t\t\t\t\"EXTRA\":            \""+db.TABLES[i].COLUMNS[z].EXTRA              +"\","  );
+                        f.WriteLine("\t\t\t\t\t\"COLUMN_TYPE\":      \""+db.TABLES[i].COLUMNS[z].COLUMN_TYPE        +"\","  );
                         f.WriteLine("\t\t\t\t\t\"IS_PRIMARY\":       \""+((db.TABLES[i].COLUMNS[z].IS_PRIMARY      ) ? "true" : false)+"\","  );
                         f.WriteLine("\t\t\t\t\t\"IS_UNIQUE\":        \""+((db.TABLES[i].COLUMNS[z].IS_UNIQUE       ) ? "true" : false)+"\","  );
                         f.WriteLine("\t\t\t\t\t\"IS_AUTOINCREMENT\": \""+((db.TABLES[i].COLUMNS[z].IS_AUTOINCREMENT) ? "true" : false)+"\","  );
@@ -190,12 +193,22 @@ namespace DATABASE {
             }
         }
 
+        public bool doesDatabaseExists(string db_name) {
+            if (!DATABASE_NAME_DOWLOADED) getAllDatabases(DATABASE_MAIN);
+            foreach (DATABASE_STRUCT db in DATABASES) {
+                if (db.DB_NAME == db_name) return true;
+            }
+            return false;
+        }
+
         public void getAllScheme() {
+            DATABASE_TABLES_DOWLOADED = true;
             getAllDatabases         (DATABASE_MAIN);
             getAllTablesForDatabases(DATABASE_MAIN);
         }
 
         public void getAllTablesForDatabases(DATABASE db) {
+            DATABASE_TABLES_DOWLOADED = true;
             foreach (DATABASE_STRUCT dbClass in DATABASES) {
                 String sql_get_tables_in_db      = "SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='"+dbClass.DB_NAME+"' GROUP BY TABLE_NAME;";
                 List<Dictionary<string, object>> TableNames = db.query(sql_get_tables_in_db).data;
@@ -213,14 +226,21 @@ namespace DATABASE {
                                 case "COLUMN_NAME":
                                     table_column_struct.COLUMN_NAME         = (string)singleColumn.Value;
                                 break;
-                                case "COLUMN_DEAFULT":
-                                    table_column_struct.COLUMN_DEAFULT      = (string)singleColumn.Value;
+                                case "COLUMN_DEFAULT":
+                                    if (DBNull.Value.Equals(singleColumn.Value)){
+                                        table_column_struct.COLUMN_DEFAULT      = "NULL";
+                                    }else { 
+                                        table_column_struct.COLUMN_DEFAULT      = (string)singleColumn.Value;
+                                    }
                                 break;
                                 case "ORDINAL_POSITION":
                                     table_column_struct.ORDINAL_POSITION    = (int)(UInt64)singleColumn.Value;
                                 break;
                                 case "DATA_TYPE":
                                     table_column_struct.DATA_TYPE           = (string)singleColumn.Value;
+                                break;
+                                case "COLUMN_TYPE":
+                                    table_column_struct.COLUMN_TYPE         = (string)singleColumn.Value;
                                 break;
                                 case "COLUMN_KEY":
                                     table_column_struct.COLUMN_KEY          = (string)singleColumn.Value;
@@ -244,6 +264,7 @@ namespace DATABASE {
         }
 
         public void getAllDatabases(DATABASE db) {
+            DATABASE_NAME_DOWLOADED = true;
             QUERY_RESULT databases = new QUERY_RESULT();
             databases = db.query("SHOW DATABASES");
             

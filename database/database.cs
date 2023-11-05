@@ -15,6 +15,10 @@ namespace DATABASE {
             return ref conn;
         }
 
+        public void changeDB(string db_name) {
+            query("USE "+db_name);
+        }
+
         /// <summary>
         /// Establishes a database connection using provided credentials.
         /// Given credentials will overwrite main connection credentials

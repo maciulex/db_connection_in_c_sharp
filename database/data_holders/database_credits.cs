@@ -4,7 +4,7 @@ namespace DATABASE {
         public string DATABASE_SERVER  = "xxx.xxx.x.x";
         public string USER             = "xxx";
         public string PASSWORD         = "xxx";
-        public string DATABASE         = "xxx";
+        public string DATABASE         = "";
 
         public DATABASE_CREDITS(string server, string user, string password, string database) {
             DATABASE_SERVER = server;
@@ -12,6 +12,12 @@ namespace DATABASE {
             PASSWORD        = password;
             DATABASE        = database;
         }
+        public DATABASE_CREDITS(string server, string user, string password) {
+            DATABASE_SERVER = server;
+            USER            = user;
+            PASSWORD        = password;
+        }
+
         public DATABASE_CREDITS() {
             
         }
