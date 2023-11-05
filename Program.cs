@@ -5,30 +5,35 @@ internal class HelloWorld
     static void Main()
     {
         //opcja 1 z konkretnym serverem ustawione
-        DATABASE.DATABASE_CREDITS db_cr = new DATABASE.DATABASE_CREDITS("localhost", "root", "");
-        DATABASE.DATABASE db = new DATABASE.DATABASE(db_cr);
+        DATABASE.DATABASE_CREDITS db_cr = new DATABASE.DATABASE_CREDITS("localhost", "root", "");//option 1 connects to specified server
+        //DATABASE.DATABASE_CONNECTION db = new DATABASE.DATABASE_CONNECTION(); // conn option 2 connects to data from data_holders/database_credits.cs
+        DATABASE.DATABASE db = new DATABASE.DATABASE(db_cr);//creates connection
 
-        //DATABASE.DATABASE_CONNECTION db = new DATABASE.DATABASE_CONNECTION(); // opcja 2 deafultowe wartości z pliku database_credits
 
-        //db.MANAGER.wholeSnippet();     //stworzenie plików json c# sql
-        //db.MANAGER.dbSchemeToJSON();   //stworzenie obrazu bazy danych do pliku json
-        //db.MANAGER.dbSchemeToClass();  //stworzenie obrazu bazy danych do plików c# zawięrajacych namespace DATABASE_SCHEME class <db_name> -> class<table>
-        //db.MANAGER.getAllSnipets();    //stworzenie i plików json i c#
-        //db.MANAGER.getAllScheme();     //pobranie struktóry baz danych z serwera
+        //db.changeDB("db_name"); // changes active database
 
-        //opcja 1 połączenie jest otwierane i zamykane w query
+        //db.MANAGER.wholeSnippet();     //create files json(database structures) c#(for use in program) sql(data in databases)
+        //db.MANAGER.dbSchemeToJSON();   //create image of database structure
+        //db.MANAGER.dbSchemeToClass();  //Create image of database in c# files class namespace DATABASE_SCHEME, class <db_name>_DATABASE -> class <table>_TABLE
+        //db.MANAGER.getAllSnipets();    //Creates json and c# files
+        //db.MANAGER.dbDataToSql();      //Creates sql files with INSERT commands for restoring database data in tables
+        //db.MANAGER.getAllScheme();     //Download database structure from server saves in db.DATABASES.MANAGER var;
+
+        //drops all databases from given path (only json files)
         //db.MANAGER.dropAllDatabsesFromSnippet("programmist/snippet/1/json/");
+        //creates databases and tables from given json file
         //db.MANAGER.recoverFromJson("programmist/snippet/1/json/");
-        //db.MANAGER.dbDataToSql();
-        db.MANAGER.sqlDataToDb("programmist/snippet/1/sql/");
+        //restores data in tables from given sql path
+        //db.MANAGER.sqlDataToDb("programmist/snippet/1/sql/");
         return;
-        // string query = new DATABASE.QUERY_BUILDER().SELECT("*").FROM("agents").getDone();//stworzenie query
+        // string query = new DATABASE.QUERY_BUILDER().SELECT("*").FROM("agents").getDone();//Creating query not finished!
         // Console.WriteLine(query);
-        // var data = db.query(query); // wykonanie query metoda zwraca klase QUERY_RESULT
+        // var data = db.query(query); //executes query returns data_holders/QUERY_RESULT
+        
+        //cating query_result to generated c# class based on database structure
+        // List<DATABASE_SCHEME.example_db_DATABASE.agents_TABLE> TEMPS = DATABASE_SCHEME.example_db_DATABASE.agents_TABLE.get_agents_from_query(data)
 
-        // List<DATABASE_SCHEME.example_db_DATABASE.agents_TABLE> TEMPS = new List<DATABASE_SCHEME.example_db_DATABASE.agents_TABLE>{};//stworzenie listy
-        // TEMPS = DATABASE_SCHEME.example_db_DATABASE.agents_TABLE.get_agents_from_query(data);//konwersja QUERY_RESULT na liste class z zapytania, klasy wygenerowane przez db.MANAGER.dbSchemeToClass(); 
-
+        //printing some data
         // foreach(DATABASE_SCHEME.example_db_DATABASE.agents_TABLE t in TEMPS) {
         //     Console.WriteLine(t.AGENT_CODE  );
         //     Console.WriteLine(t.AGENT_NAME  );
@@ -37,7 +42,7 @@ internal class HelloWorld
 
         // }
 
-        //db.connect(); // opcja 2 połączenie manualnie otwierane i zamyka odpowiednie do wielu zapytań
+        //db.connect(); //manual opening and closing connection 
         //var data = db.query(query);
         //db.closeConnection();
 

@@ -1,3 +1,11 @@
 trzeba wykonać tą komende tam gdzie wykonujemy dotnet run by wszystko działało (Potrzebna jest biblioteka z połączeniem do bazy danych)
 dotnet add package MySqlConnector
 dotnet add package newtonsoft.json
+
+for program.cs to work as is you first need to generate db_classes db.MANAGER.getAllSnipets(); or db.MANAGER.getAllScheme();
+and as important is
+this part of code from database/database_manager.cs where you can set whitelist or blacklist some databases
+        enum DATABASE_LIST_MODE {WHITELIST, BLACKLIST};
+        DATABASE_LIST_MODE DATABASE_LIST_ACTIVE_MODE = DATABASE_LIST_MODE.WHITELIST;
+        //"performance_schema", "information_schema","mysql"
+        List<string> 
