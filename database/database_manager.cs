@@ -263,6 +263,27 @@ namespace DATABASE {
             }
         }
 
+
+        public bool checkIfIgnoreDatabase(string db_name) {
+            bool toIgnore = false;
+            if (DATABASE_LIST_ACTIVE_MODE == DATABASE_LIST_MODE.BLACKLIST) {
+                foreach (string ignore in DATABASE_LIST) {
+                    if (ignore == db_name) {
+                        toIgnore = true;
+                        break;
+                    }
+                }
+            } else {
+                toIgnore = true;
+                foreach (string ignore in DATABASE_LIST) {
+                    if (ignore == db_name) {
+                        toIgnore = false;
+                        break;
+                    }
+                }
+            }
+            return toIgnore;
+        }
         public void getAllDatabases(DATABASE db) {
             DATABASE_NAME_DOWLOADED = true;
             QUERY_RESULT databases = new QUERY_RESULT();
@@ -278,27 +299,12 @@ namespace DATABASE {
                 foreach (var name in data){
                     if (name.Key != "Database") continue;
 
-                    bool toIgnore = false;
                     //kvp.Key   <- to jest nazwa kolumny
                     //kvp.Value <- to jest wartość tej kolumny
-                    if (DATABASE_LIST_ACTIVE_MODE == DATABASE_LIST_MODE.BLACKLIST) {
-                        foreach (string ignore in DATABASE_LIST) {
-                            if (ignore == (String)name.Value) {
-                                toIgnore = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        toIgnore = true;
-                        foreach (string ignore in DATABASE_LIST) {
-                            if (ignore == (String)name.Value) {
-                                toIgnore = false;
-                                break;
-                            }
-                        }
-                    }
 
-                    if (toIgnore) continue;
+
+                    if (checkIfIgnoreDatabase((string)name.Value)) continue;
+
                     DATABASE_STRUCT dNew = new DATABASE_STRUCT();
                     dNew.DB_NAME = (String)name.Value;
                     DATABASES.Add(dNew);
